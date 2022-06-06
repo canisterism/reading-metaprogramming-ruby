@@ -21,8 +21,11 @@ end
 class A2
   def initialize(names)
     names.each do |name|
-      self.class.define_method "hoge_#{name}" do
-        names.length.times.map { "hoge_#{name}" }.join('')
+      method_name = "hoge_#{name}"
+      self.define_singleton_method method_name do |n|
+        return dev_team if n.nil?
+
+        method_name * n
       end
     end
   end
@@ -36,3 +39,30 @@ end
 # 次の動作をする OriginalAccessor モジュール を実装する
 # - OriginalAccessorモジュールはincludeされたときのみ、my_attr_accessorメソッドを定義すること
 # - my_attr_accessorはgetter/setterに加えて、boolean値を代入した際のみ真偽値判定を行うaccessorと同名の?メソッドができること
+
+# 以下分からなすぎて答え見た
+module OriginalAccessor
+  # includeされた時に呼ばれるフックメソッド
+  # klassはincludeを実行したクラス
+  def self.included(klass)
+    # object#extend(module)はレシーバの特異クラスにmoduleをincludeする
+    klass.extend(ClassMethod)
+  end
+
+  module ClassMethod
+    def my_attr_accessor(name)
+      define_method name do
+        instance_variable_get("@#{name}")
+      end
+
+      define_method "#{name}=" do |value|
+        if [true, false].include?(value)
+          define_singleton_method "#{name}?" do
+            !!send(name)
+          end
+        end
+        instance_variable_set("@#{name}", value)
+      end
+    end
+  end
+end

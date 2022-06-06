@@ -11,3 +11,31 @@
     - こういったケースでは必要最小限のメソッドだけ実装したクラスに `method_missing` を実装すればよく、このようなクラスのことをブランクスレートという
         - Rubyでは `BasicObject` がブランクスレートして利用しやすいオブジェクトの一つ
             - e.g. https://github.com/jimweirich/builder
+## メモ
+
+### 特異メソッド
+
+>特異メソッド(singleton_method)とはクラスではなくある特定のオブジェクトに固有のメソッド
+
+引用：[クラス／メソッドの定義 (Ruby 3.1 リファレンスマニュアル)](https://docs.ruby-lang.org/ja/latest/doc/spec=2fdef.html#singleton_method)
+
+- クラスメソッドはクラスに定義された特異メソッドのこと。
+- `#{定義対象のオブジェクト}.#{メソッド名}`で定義できる
+```ruby
+hoge = Hoge.new
+def hoge.fuga
+  "hogefuga"
+end
+hoge.fuga #=> "hogefuga"
+```
+- 特異メソッドは特異クラス（シングルトンクラス）に住んでいる。
+  - 上記のようにメソッド定義をするとRubyが特異クラスを生成してそこにメソッドを定義している。
+```ruby
+hoge.fuga #=> "hogefuga"
+```
+
+### Object#extend
+
+>引数で指定したモジュールのインスタンスメソッドを self の特異メソッドとして追加します。
+
+[Object#extend (Ruby 3.1 リファレンスマニュアル)](https://docs.ruby-lang.org/ja/latest/method/Object/i/extend.html)
