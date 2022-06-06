@@ -5,19 +5,58 @@ TryOver3 = Module.new
 # - `test_` から始まるインスタンスメソッドが実行された場合、このクラスは `run_test` メソッドを実行する
 # - `test_` メソッドがこのクラスに実装されていなくても `test_` から始まるメッセージに応答することができる
 # - TryOver3::A1 には `test_` から始まるインスタンスメソッドが定義されていない
+module TryOver3
+  class A1
+    def run_test
+      nil
+    end
 
+    def method_missing(name, *args)
+      return run_test if start_with_test_?(name)
+
+      super
+    end
+
+    private
+
+    def start_with_test_?(string)
+      !!(/test_/ =~ string)
+    end
+  end
+end
 
 # Q2
 # 以下要件を満たす TryOver3::A2Proxy クラスを作成してください。
 # - TryOver3::A2Proxy は initialize に TryOver3::A2 のインスタンスを受け取り、それを @source に代入する
 # - TryOver3::A2Proxy は、@sourceに定義されているメソッドが自分自身に定義されているように振る舞う
-class TryOver3::A2
-  def initialize(name, value)
-    instance_variable_set("@#{name}", value)
-    self.class.attr_accessor name.to_sym unless respond_to? name.to_sym
+
+module TryOver3
+  class A2
+    def initialize(name, value)
+      instance_variable_set("@#{name}", value)
+      self.class.attr_accessor name.to_sym unless respond_to? name.to_sym
+    end
   end
 end
 
+class TryOver3::A2Proxy
+  # @param source [TryOver3::A2]
+  def initialize(source)
+    @source = source
+  end
+
+  def method_missing(name, *args)
+    @source.send(name, *args)
+  end
+
+  # respond_to?はゴーストメソッドを探せない
+  # respond_to_missing?はrespond_to?内でフォールバック先として呼ばれる、ゴーストメソッドにも反応するためのメソッド
+  # method_missingをオーバーライドするときはこっちにも実装するのがお作法
+  # @see https://docs.ruby-lang.org/ja/latest/method/Object/i/respond_to_missing=3f.html)
+  def respond_to_missing?(method, include_private = false)
+    @source.respond_to?(method) || super
+  end
+end
 
 # Q3
 # 前回 OriginalAccessor の my_attr_accessor で定義した getter/setter に boolean の値が入っている場合には #{name}? が定義されるようなモジュールを実装しました。
@@ -31,10 +70,15 @@ module TryOver3::OriginalAccessor2
       end
 
       define_method "#{attr_sym}=" do |value|
-        if [true, false].include?(value) && !respond_to?("#{attr_sym}?")
-          self.class.define_method "#{attr_sym}?" do
-            @attr == true
+        if [true, false].include?(value)
+          unless respond_to?("#{attr_sym}?")
+            self.class.define_method "#{attr_sym}?" do
+              @attr == true
+            end
           end
+        else
+          self.class.undef_method attr_sym if respond_to? attr_sym
+          self.class.undef_method "#{attr_sym}?" if respond_to? "#{attr_sym}?"
         end
         @attr = value
       end
@@ -42,13 +86,24 @@ module TryOver3::OriginalAccessor2
   end
 end
 
-
 # Q4
 # 以下のように実行できる TryOver3::A4 クラスを作成してください。
 # TryOver3::A4.runners = [:Hoge]
 # TryOver3::A4::Hoge.run
 # # => "run Hoge"
 
+class TryOver3::A4
+  # @param runners [Array(Symbol)]
+  def self.runners=(runners)
+    runners.each do |runner|
+      const_set(runner, Class.new do
+        define_singleton_method :run do
+          "run #{runner}"
+        end
+      end)
+    end
+  end
+end
 
 # Q5. チャレンジ問題！ 挑戦する方はテストの skip を外して挑戦してみてください。
 #
@@ -64,7 +119,10 @@ module TryOver3::TaskHelper
           block_return
         end
       end
-      new_klass_name = name.to_s.split("_").map{ |w| w[0] = w[0].upcase; w }.join
+      new_klass_name = name.to_s.split('_').map do |w|
+        w[0] = w[0].upcase
+        w
+      end.join
       const_set(new_klass_name, new_klass)
     end
   end
@@ -75,7 +133,7 @@ class TryOver3::A5Task
   include TryOver3::TaskHelper
 
   task :foo do
-    "foo"
+    'foo'
   end
 end
 # irb(main):001:0> A3Task::Foo.run
