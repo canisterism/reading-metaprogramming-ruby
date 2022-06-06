@@ -92,16 +92,25 @@ end
 # TryOver3::A4::Hoge.run
 # # => "run Hoge"
 
+# test_q4_not_exists_runner_classがパスできなくて答え見た
 class TryOver3::A4
-  # @param runners [Array(Symbol)]
-  def self.runners=(runners)
-    runners.each do |runner|
-      const_set(runner, Class.new do
-        define_singleton_method :run do
-          "run #{runner}"
-        end
-      end)
-    end
+  def self.runners=(args)
+    @runners = args
+  end
+
+  def self.runners
+    @runners
+  end
+
+  def self.const_missing(const)
+    return super unless self.runners.include?(const)
+
+    const_set(const, Class.new do |c|
+      # c.define_singleton_methodすることでcのクラスメソッドとして生やす
+      c.define_singleton_method :run do
+        "run #{const}"
+      end
+    end)
   end
 end
 
