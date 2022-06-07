@@ -102,15 +102,16 @@ class TryOver3::A4
     @runners
   end
 
-  def self.const_missing(const)
-    return super unless self.runners.include?(const)
+  def self.const_missing(const_name)
+    return super unless self.runners.include?(const_name)
 
-    const_set(const, Class.new do |c|
-      # c.define_singleton_methodすることでcのクラスメソッドとして生やす
-      c.define_singleton_method :run do
-        "run #{const}"
+    klass = Class.new do |c|
+      c.define_singleton_method "run" do
+        "run #{const_name}"
       end
-    end)
+    end
+
+    const_set(const_name, klass)
   end
 end
 
