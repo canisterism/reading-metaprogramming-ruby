@@ -80,32 +80,32 @@ class TestTryOver03Q1 < Minitest::Test
     refute_includes(TryOver3::A4.constants, :Hoge)
   end
 
-  def test_q5_task_helper_call_method
-    skip
-    assert_equal("foo", TryOver3::A5Task.foo)
-  end
+  # def test_q5_task_helper_call_method
+  #   skip
+  #   assert_equal("foo", TryOver3::A5Task.foo)
+  # end
 
-  def test_q5_task_helper_not_exists_class
-    skip
-    refute_includes TryOver3::A5Task.constants, :Foo
-  end
+  # def test_q5_task_helper_not_exists_class
+  #   skip
+  #   refute_includes TryOver3::A5Task.constants, :Foo
+  # end
 
-  def test_q5_task_helper_call_class
-    skip
-    assert_equal("foo", TryOver3::A5Task::Foo.run)
-  end
+  # def test_q5_task_helper_call_class
+  #   skip
+  #   assert_equal("foo", TryOver3::A5Task::Foo.run)
+  # end
 
-  def test_q5_task_helper_call_class_with_warn
-    skip
-    _, err = capture_io do
-      TryOver3::A5Task::Foo.run
-    end
-    assert_match "Warning: TryOver3::A5Task::Foo.run is deprecated", err
-  end
+  # def test_q5_task_helper_call_class_with_warn
+  #   skip
+  #   _, err = capture_io do
+  #     TryOver3::A5Task::Foo.run
+  #   end
+  #   assert_match "Warning: TryOver3::A5Task::Foo.run is deprecated", err
+  # end
 
-  def test_q5_error_when_called_not_defined_task_class
-    assert_raises(NameError) { TryOver3::A5Task::Bar.run }
-  end
+  # def test_q5_error_when_called_not_defined_task_class
+  #   assert_raises(NameError) { TryOver3::A5Task::Bar.run }
+  # end
 
   private
 
@@ -121,4 +121,3 @@ class TestTryOver03Q1 < Minitest::Test
     end.new
   end
 end
-
