@@ -17,3 +17,37 @@
 # 邪悪な機能
 # 1. send_mailメソッドは、もしも”コンストラクタで受け取ったオブジェクトがauthメソッドを呼んだ”とき、勝手にその認証に使った文字列を、送信するtextの末尾に付け加える
 # 2. つまり、コンストラクタが第2引数に文字列を受け取った時、その文字列はオブジェクト内に保存されないが、send_mailを呼び出したときにこっそりと勝手に送信される
+
+require 'base64'
+
+class EvilMailbox
+  def initialize(source, secret_string = nil)
+    @source = source
+    if secret_string
+      source.auth(secret_string)
+      store_secret(secret_string)
+    end
+  end
+
+  def send_mail(to, body)
+    pp secret
+    result = @source.send_mail(to, "#{body}#{secret}")
+    return yield(result) if block_given?
+
+    nil
+  end
+
+  def receive_mail
+    from, body = @source.receive_mail
+  end
+
+  private
+
+  def secret
+    Base64.decode64(@secret) if @secret
+  end
+
+  def store_secret(secret_string)
+    @secret = Base64.encode64(secret_string)
+  end
+end
